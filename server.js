@@ -110,9 +110,13 @@ async function refreshAdbStatus() {
 
 // REST API for network info & QR code
 app.get('/api/network-info', async (req, res) => {
+  const hostHeader = req.headers['x-forwarded-host'] || req.headers.host || '';
+  const protoHeader = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+  const isCloudHost = hostHeader && !/^(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/i.test(hostHeader);
+
   const ips = getLocalNetworkAddresses();
   const selectedIp = req.query.ip || ips[0].address;
-  const protocol = req.query.protocol || 'https';
+  const protocol = req.query.protocol || (isCloudHost ? protoHeader : 'https');
   const targetPort = protocol === 'https' ? HTTPS_PORT : HTTP_PORT;
   let sessionId = req.query.session;
   
@@ -127,7 +131,12 @@ app.get('/api/network-info', async (req, res) => {
   }
   
   const session = sessions.get(sessionId);
-  const mobileUrl = `${protocol}://${selectedIp}:${targetPort}/client.html?session=${sessionId}&pin=${session.pin}`;
+  let mobileUrl;
+  if (isCloudHost) {
+    mobileUrl = `${protoHeader}://${hostHeader}/client.html?session=${sessionId}&pin=${session.pin}`;
+  } else {
+    mobileUrl = `${protocol}://${selectedIp}:${targetPort}/client.html?session=${sessionId}&pin=${session.pin}`;
+  }
   
   try {
     const qrDataUrl = await QRCode.toDataURL(mobileUrl, {
@@ -144,9 +153,9 @@ app.get('/api/network-info', async (req, res) => {
       port: HTTP_PORT,
       httpsPort: HTTPS_PORT,
       hasHttps: true,
-      protocol,
-      interfaces: ips,
-      selectedIp,
+      protocol: isCloudHost ? protoHeader : protocol,
+      interfaces: isCloudHost ? [{ name: 'Cloud Host', address: hostHeader, isWifi: false }, ...ips] : ips,
+      selectedIp: isCloudHost ? hostHeader : selectedIp,
       sessionId,
       pin: session.pin,
       mobileUrl,
@@ -452,7 +461,8 @@ async function start() {
     });
   });
 
-  if (sslOpts) {
+  // Only start local HTTPS server if running locally (Render/Vercel already provide SSL on port 443)
+  if (sslOpts && !process.env.RENDER && !process.env.VERCEL && !process.env.PORT) {
     httpsServer = https.createServer(sslOpts, app);
     httpsServer.on('upgrade', handleUpgrade);
     httpsServer.listen(HTTPS_PORT, '0.0.0.0', () => {
@@ -471,4 +481,5 @@ if (!process.env.VERCEL) {
 }
 
 module.exports = app;
+
 
