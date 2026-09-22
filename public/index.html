@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AetherSync - Remote Wireless Mobile Debugger & Controller</title>
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%200%20100%20100%22><text y=%22.9em%22 font-size=%2290%22>📱</text></svg>">
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header class="app-header">
+    <div class="brand-logo">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+          <rect x="5" y="2" width="14" height="20" rx="3"></rect>
+          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        </svg>
+      </div>
+      <span>AetherSync <span style="font-size: 11px; font-weight: 500; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 2px 6px; border-radius: 4px; margin-left: 6px;">REMOTE DEBUGGER</span></span>
+    </div>
+
+    <div class="header-status-group">
+      <!-- Network IP Selector -->
+      <select id="network-interface-select" class="network-select" title="Select Network Interface"></select>
+
+      <!-- ADB Status Indicator -->
+      <div id="adb-status-pill" class="status-pill" style="cursor: pointer;" title="Click to view Android Wireless Debugging">
+        <div class="status-dot" id="adb-status-dot" style="background: #f59e0b;"></div>
+        <span id="adb-status-text">ADB: Checking...</span>
+      </div>
+
+      <!-- Status Indicator -->
+      <div id="header-status-badge" class="status-pill status-waiting">
+        <div class="status-dot"></div>
+        <span id="header-status-text">Waiting for Mobile Connection...</span>
+      </div>
+
+      <div id="header-ping-badge" class="status-pill" style="font-family: var(--font-mono); font-size: 11px; color: #94a3b8;">
+        -- ms
+      </div>
+
+      <!-- QR Pairing Button -->
+      <button id="btn-show-qr" class="btn-header btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Pair Device (QR)
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="app-workspace">
+
+    <!-- Left Panel: Device Simulator & Screen Mirror -->
+    <section class="device-panel">
+      <!-- Device Toolbar -->
+      <div class="device-toolbar">
+        <div class="tool-group">
+          <button id="btn-rotate-phone" class="tool-btn" title="Rotate Orientation">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            Rotate
+          </button>
+          <button id="btn-laser-tool" class="tool-btn" title="Laser Pointer / Markup Mode">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="#ef4444"/></svg>
+            Laser
+          </button>
+          <button id="btn-quick-vibrate" class="tool-btn" title="Trigger Haptic Pulse on Phone">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 1 0 8M6 8a6 6 0 0 0 0 8M2 5v14M22 5v14"/></svg>
+            Vibrate
+          </button>
+        </div>
+
+        <div class="tool-group">
+          <button id="btn-screenshot" class="tool-btn" title="Capture Screenshot">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Snap
+          </button>
+          <button id="btn-record" class="tool-btn" title="Record Screen Stream">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+            Record
+          </button>
+          <button id="btn-reload-phone" class="tool-btn" title="Reload Phone Page">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Device Viewport Container -->
+      <div class="device-viewport-area">
+        <div id="phone-frame" class="phone-frame">
+          <!-- Dynamic Island / Top Notch -->
+          <div class="phone-notch">
+            <div class="notch-camera"></div>
+            <div class="notch-sensor"></div>
+          </div>
+
+          <!-- Phone Screen -->
+          <div id="phone-screen" class="phone-screen">
+            <!-- WebRTC Live Stream Video Mirror -->
+            <video id="mirror-video" autoplay playsinline muted></video>
+
+            <!-- Live DOM / Sandbox Mirror -->
+            <iframe id="mirror-iframe" style="width: 100%; height: 100%; border: none; background: #090d16; display: none; pointer-events: none;"></iframe>
+
+            <!-- Canvas Snapshot Mirror -->
+            <canvas id="mirror-canvas" style="width: 100%; height: 100%; object-fit: contain; display: none; background: #090d16;"></canvas>
+
+            <!-- Touch Visualizer Overlay -->
+            <div id="phone-touch-layer"></div>
+
+            <!-- Placeholder State -->
+            <div id="mirror-placeholder" class="mirror-placeholder">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="5" y="2" width="14" height="20" rx="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+              <div style="font-weight: 600; font-size: 15px; color: #fff; margin-bottom: 6px;">Ready for Mirroring</div>
+              <div style="font-size: 12px; line-height: 1.5; color: #94a3b8; max-width: 220px;">
+                Scan the QR code on your phone, then tap <strong>"Mirror Screen"</strong> to stream your display here!
+              </div>
+            </div>
+          </div>
+
+          <!-- Android System Navigation Buttons -->
+          <div class="android-nav-bar" id="android-nav-bar" style="display: flex; justify-content: space-around; align-items: center; background: #080c14; border-top: 1px solid #1e293b; padding: 6px 10px; width: 100%; z-index: 50;">
+            <button id="btn-adb-back" class="tool-btn" title="Android Back (keyevent 4)" style="font-size: 14px; padding: 4px 12px; background: #131d33; color:#fff;">◀</button>
+            <button id="btn-adb-home" class="tool-btn" title="Android Home (keyevent 3)" style="font-size: 14px; padding: 4px 12px; background: #131d33; color:#fff;">⭕</button>
+            <button id="btn-adb-recents" class="tool-btn" title="Android Recents (keyevent 187)" style="font-size: 14px; padding: 4px 12px; background: #131d33; color:#fff;">▢</button>
+            <button id="btn-adb-power" class="tool-btn" title="Android Power" style="font-size: 11px; padding: 4px 8px; background: #131d33; color:#fff;">🔒</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Device Bottom Address / Navigation Bar -->
+      <div class="device-nav-bar">
+        <div class="url-input-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <input type="text" id="device-url-input" class="url-input" placeholder="Navigate phone: e.g. https://google.com">
+        </div>
+        <button id="btn-navigate-url" class="tool-btn" style="background: #1e293b; color: #fff; padding: 6px 12px;">Go</button>
+      </div>
+    </section>
+
+    <!-- Right Panel: DevTools Suite -->
+    <section class="devtools-panel">
+      <!-- Tabs Header -->
+      <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="console">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          Console
+        </button>
+        <button class="tab-btn" data-tab="network">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+          Network
+        </button>
+        <button class="tab-btn" data-tab="dom">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Elements & DOM
+        </button>
+        <button class="tab-btn" data-tab="storage">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          Storage
+        </button>
+        <button class="tab-btn" data-tab="sensors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          Sensors & 3D Gyro
+        </button>
+        <button class="tab-btn" data-tab="os-mirror" style="color: #a855f7;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+          Whole Phone OS
+        </button>
+      </nav>
+
+      <!-- Tab Contents -->
+      <div class="tab-content-area">
+
+        <!-- Tab 1: Console -->
+        <div id="tab-console" class="tab-pane active">
+          <div class="tab-toolbar">
+            <div class="tool-group">
+              <select id="console-level-filter" class="network-select" style="padding: 3px 8px; font-size: 11px;">
+                <option value="all">All Levels</option>
+                <option value="log">Logs</option>
+                <option value="info">Info</option>
+                <option value="warn">Warnings</option>
+                <option value="error">Errors</option>
+              </select>
+              <input type="text" id="console-search-input" class="url-input" style="background:#131d33; padding:4px 8px; border-radius:6px; border:1px solid #1e293b; width:180px;" placeholder="Filter logs...">
+            </div>
+            <button id="console-btn-clear" class="tool-btn" title="Clear console">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              Clear
+            </button>
+          </div>
+
+          <div id="console-logs" class="console-logs-container">
+            <!-- Log entries will be rendered here -->
+            <div class="console-entry entry-info">
+              <span class="console-time">00:00:00</span>
+              <div class="console-content">✨ OmniDebug Console connected. Ready to capture mobile logs and execute remote JavaScript.</div>
+            </div>
+          </div>
+
+          <!-- Remote REPL -->
+          <div class="console-repl-box">
+            <span class="repl-prompt">&gt;</span>
+            <input type="text" id="console-repl-input" class="repl-input" placeholder="Execute JavaScript on phone: e.g. document.body.style.background='purple', alert('Hi'), location.href">
+          </div>
+        </div>
+
+        <!-- Tab 2: Network -->
+        <div id="tab-network" class="tab-pane">
+          <div class="tab-toolbar">
+            <div class="tool-group">
+              <input type="text" id="network-filter-input" class="url-input" style="background:#131d33; padding:4px 8px; border-radius:6px; border:1px solid #1e293b; width:220px;" placeholder="Filter requests (URL, domain)...">
+            </div>
+            <button id="network-btn-clear" class="tool-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              Clear
+            </button>
+          </div>
+
+          <div style="flex: 1; display: flex; overflow: hidden;">
+            <div class="network-table-container">
+              <table class="network-table">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Method</th>
+                    <th>Name / URL</th>
+                    <th>Time</th>
+                    <th>Size</th>
+                  </tr>
+                </thead>
+                <tbody id="network-table-body">
+                  <!-- Network rows here -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Detail Drawer -->
+            <div id="network-detail-pane" style="width: 360px; background: #0c1222; border-left: 1px solid #1e293b; display: none; flex-direction: column; overflow-y: auto; padding: 14px; font-size: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div>
+                  <div id="detail-url" style="font-weight: 700; color: #38bdf8; word-break: break-all;"></div>
+                  <div id="detail-status" style="color: #94a3b8; font-size: 11px; margin-top: 4px;"></div>
+                </div>
+                <button id="network-detail-close" class="tool-btn" style="padding: 2px 6px;">✕</button>
+              </div>
+
+              <div style="margin-bottom: 12px;">
+                <div style="font-weight: 600; color: #fbbf24; margin-bottom: 4px;">Request Headers</div>
+                <pre id="detail-req-headers" style="background:#090d16; padding:8px; border-radius:6px; overflow-x:auto; font-family:var(--font-mono); font-size:11px;"></pre>
+              </div>
+
+              <div style="margin-bottom: 12px;">
+                <div style="font-weight: 600; color: #fbbf24; margin-bottom: 4px;">Response Headers</div>
+                <pre id="detail-res-headers" style="background:#090d16; padding:8px; border-radius:6px; overflow-x:auto; font-family:var(--font-mono); font-size:11px;"></pre>
+              </div>
+
+              <div style="margin-bottom: 12px;">
+                <div style="font-weight: 600; color: #34d399; margin-bottom: 4px;">Request Body</div>
+                <pre id="detail-req-body" style="background:#090d16; padding:8px; border-radius:6px; overflow-x:auto; font-family:var(--font-mono); font-size:11px;"></pre>
+              </div>
+
+              <div>
+                <div style="font-weight: 600; color: #34d399; margin-bottom: 4px;">Response Preview</div>
+                <pre id="detail-res-body" style="background:#090d16; padding:8px; border-radius:6px; overflow-x:auto; font-family:var(--font-mono); font-size:11px;"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Elements & DOM -->
+        <div id="tab-dom" class="tab-pane">
+          <div class="tab-toolbar">
+            <span style="color: #94a3b8; font-size: 12px;">Hover nodes to highlight on phone • Click node to edit live CSS styles</span>
+            <button id="dom-btn-refresh" class="tool-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              Refresh DOM
+            </button>
+          </div>
+
+          <div class="dom-split-view">
+            <div id="dom-tree-container" class="dom-tree-panel">
+              <div style="color: #64748b; padding: 12px;">Loading DOM hierarchy...</div>
+            </div>
+
+            <!-- Styles & Attributes Pane -->
+            <div id="dom-styles-container" class="dom-styles-panel">
+              <div style="font-size: 13px; font-weight: 700; color: #38bdf8; margin-bottom: 10px;" id="selected-element-selector">
+                (Select an element)
+              </div>
+
+              <div style="margin-bottom: 14px;">
+                <div style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px;">Attributes</div>
+                <div id="dom-node-attributes" style="background:#0f172a; padding:8px; border-radius:6px;">--</div>
+              </div>
+
+              <div>
+                <div style="font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px;">Live CSS Rule Injector</div>
+                <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                  <input type="text" id="style-prop-input" class="url-input" style="background:#0f172a; padding:6px 8px; border-radius:6px; border:1px solid #1e293b;" placeholder="Property: e.g. color">
+                  <input type="text" id="style-val-input" class="url-input" style="background:#0f172a; padding:6px 8px; border-radius:6px; border:1px solid #1e293b;" placeholder="Value: e.g. #f43f5e">
+                </div>
+                <button id="dom-btn-apply-style" class="app-btn btn-primary" style="width:100%; padding:8px; font-size:12px;">Apply Style to Phone</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Storage -->
+        <div id="tab-storage" class="tab-pane">
+          <div class="tab-toolbar">
+            <div class="tool-group">
+              <button class="tool-btn storage-subtab-btn active" data-storage-type="localStorage">localStorage</button>
+              <button class="tool-btn storage-subtab-btn" data-storage-type="sessionStorage">sessionStorage</button>
+              <button class="tool-btn storage-subtab-btn" data-storage-type="cookies">Cookies</button>
+            </div>
+            <div class="tool-group">
+              <button id="storage-btn-add" class="tool-btn" style="color: #38bdf8;">+ Add Item</button>
+              <button id="storage-btn-clear-all" class="tool-btn" style="color: #f43f5e;">Clear All</button>
+            </div>
+          </div>
+
+          <div class="network-table-container">
+            <table class="network-table">
+              <thead>
+                <tr>
+                  <th style="width: 250px;">Key</th>
+                  <th>Value</th>
+                  <th style="width: 80px; text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="storage-table-body">
+                <!-- Storage rows rendered here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 5: Sensors & 3D Gyroscope -->
+        <div id="tab-sensors" class="tab-pane">
+          <div class="sensors-grid">
+            <!-- 3D Gyroscope Card -->
+            <div class="sensor-card">
+              <div class="sensor-title">
+                <span>🔄 3D Gyroscope Motion</span>
+                <span class="badge badge-green">Real-time</span>
+              </div>
+              <div class="phone-3d-scene">
+                <div id="phone-3d-model" class="phone-3d-box">
+                  PHONE
+                </div>
+              </div>
+              <div id="gyro-values-display" style="font-family: var(--font-mono); font-size: 12px; color: #94a3b8; text-align: center;">
+                α: 0° | β: 0° | γ: 0°
+              </div>
+            </div>
+
+            <!-- Battery & Power -->
+            <div class="sensor-card">
+              <div class="sensor-title">
+                <span>🔋 Battery & Power</span>
+                <span id="telemetry-battery-status" class="badge">--</span>
+              </div>
+              <div style="font-size: 36px; font-weight: 800; color: #38bdf8; font-family: var(--font-mono); margin: 12px 0;" id="telemetry-battery-val">
+                -- %
+              </div>
+              <div style="font-size: 12px; color: #94a3b8;">
+                Real-time battery level and charging state read from the phone's Battery API.
+              </div>
+            </div>
+
+            <!-- Screen Specs -->
+            <div class="sensor-card">
+              <div class="sensor-title">
+                <span>📐 Display Specs</span>
+              </div>
+              <div style="font-size: 13px; display: flex; flex-direction: column; gap: 8px; font-family: var(--font-mono);">
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:#94a3b8;">Resolution:</span>
+                  <span id="telemetry-res-val" style="color:#fff;">-- × --</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:#94a3b8;">Orientation:</span>
+                  <span id="telemetry-orient-val" style="color:#38bdf8;">--</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:#94a3b8;">Pixel Ratio:</span>
+                  <span id="telemetry-dpr-val" style="color:#fbbf24;">@1x</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:#94a3b8;">JS Heap Memory:</span>
+                  <span id="telemetry-memory-val" style="color:#34d399;">--</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Remote Haptics Playground -->
+            <div class="sensor-card">
+              <div class="sensor-title">
+                <span>📳 Remote Haptics Engine</span>
+              </div>
+              <div style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
+                Trigger instant haptic vibrations on the connected phone:
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button class="btn-header" id="btn-vib-pulse">Pulse (200ms)</button>
+                <button class="btn-header" id="btn-vib-double">Double Buzz</button>
+                <button class="btn-header" id="btn-vib-sos">SOS Pattern</button>
+                <button class="btn-header" id="btn-vib-heart">Heartbeat</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Tab 6: Android Wireless Remote Debugger & Full OS Controller -->
+        <div id="tab-os-mirror" class="tab-pane">
+          <div class="sensors-grid" style="grid-template-columns: 1fr 1fr;">
+            
+            <!-- Android Wireless ADB Quick Connect & Pairing -->
+            <div class="sensor-card" style="grid-column: span 2;">
+              <div class="sensor-title">
+                <span>🤖 Android Wireless Debugging & Full OS Control Center</span>
+                <span id="adb-active-badge" class="badge badge-yellow">Scanning...</span>
+              </div>
+              
+              <!-- Device Selector & Quick Actions -->
+              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #090d16; padding: 12px; border-radius: 10px;">
+                <label style="font-size: 12px; color: #94a3b8; font-weight: 600;">Active Device:</label>
+                <select id="adb-device-select" class="network-select" style="min-width: 220px;">
+                  <option value="">(No devices detected)</option>
+                </select>
+                <button id="btn-adb-refresh" class="btn-header" style="padding: 6px 12px; font-size: 12px;">🔄 Refresh Devices</button>
+                <button id="btn-adb-tcpip" class="btn-header" style="padding: 6px 12px; font-size: 12px; color: #38bdf8;" title="If plugged into USB, click this to switch to Wireless Mode!">⚡ Switch USB to Wireless (5555)</button>
+                <button id="btn-adb-disconnect" class="btn-header" style="padding: 6px 12px; font-size: 12px; color: #f43f5e;">Disconnect</button>
+              </div>
+
+              <!-- Two column connection tools: Connect & Pair -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
+                <!-- Box A: Direct Connect (IP:Port) -->
+                <div style="background: #090d16; padding: 14px; border-radius: 10px; border: 1px solid #1e293b;">
+                  <div style="font-size: 13px; font-weight: 700; color: #38bdf8; margin-bottom: 6px;">1. Connect via IP & Port</div>
+                  <div style="font-size: 11px; color: #94a3b8; margin-bottom: 10px;">For devices already on wireless port 5555 or custom port:</div>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="text" id="adb-connect-ip" class="form-input" style="padding: 8px; font-size: 12px;" placeholder="e.g. 192.168.1.45">
+                    <input type="text" id="adb-connect-port" class="form-input" style="width: 80px; padding: 8px; font-size: 12px;" value="5555" placeholder="Port">
+                    <button id="btn-adb-connect-submit" class="btn-header btn-primary" style="padding: 8px 14px; font-size: 12px;">Connect</button>
+                  </div>
+                </div>
+
+                <!-- Box B: Wireless Pairing (Android 11+) -->
+                <div style="background: #090d16; padding: 14px; border-radius: 10px; border: 1px solid #1e293b;">
+                  <div style="font-size: 13px; font-weight: 700; color: #34d399; margin-bottom: 6px;">2. Pair Device with Pairing Code (Android 11+)</div>
+                  <div style="font-size: 11px; color: #94a3b8; margin-bottom: 10px;">Settings $\to$ Developer Options $\to$ Wireless Debugging $\to$ Pair with Code:</div>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="text" id="adb-pair-ip" class="form-input" style="padding: 8px; font-size: 12px;" placeholder="IP (e.g. 192.168.1.45)">
+                    <input type="text" id="adb-pair-port" class="form-input" style="width: 75px; padding: 8px; font-size: 12px;" placeholder="Port">
+                    <input type="text" id="adb-pair-code" class="form-input" style="width: 90px; padding: 8px; font-size: 12px;" placeholder="6-digit PIN">
+                    <button id="btn-adb-pair-submit" class="btn-header btn-primary" style="padding: 8px 14px; font-size: 12px; background: #059669;">Pair</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Zero-Install WebRTC Full Screen Streaming (Android Chrome) -->
+            <div class="sensor-card">
+              <div class="sensor-title">
+                <span>🌐 Full Screen Streaming via Chrome (Zero Install)</span>
+                <span class="badge badge-green">30-60 FPS</span>
+              </div>
+              <div style="font-size: 12px; color: #cbd5e1; line-height: 1.6;">
+                On Android, Chrome can broadcast your <strong>entire phone screen outside the browser</strong> using secure WebRTC:
+              </div>
+              <div style="background:#090d16; padding:12px; border-radius:10px; font-size:12px; color:#94a3b8; line-height:1.7;">
+                <div>1. Scan the <strong>Secure HTTPS QR Code</strong> on your Android phone.</div>
+                <div>2. Tap <strong>"Mirror Screen"</strong> at the top.</div>
+                <div>3. Android will prompt: <em>"Start recording or casting with Chrome?"</em> $\to$ tap <strong>Start now</strong>.</div>
+                <div>4. Minimize Chrome and open any app on your phone! The laptop will display your live phone screen.</div>
+              </div>
+            </div>
+
+            <!-- Full Mouse & Keyboard Control Engine -->
+            <div class="sensor-card">
+              <div class="sensor-title">
+                <span>🖱️ Laptop $\to$ Android Live Control</span>
+                <span class="badge badge-green">Real-time</span>
+              </div>
+              <div style="font-size: 12px; color: #cbd5e1; line-height: 1.6;">
+                Once an ADB device is connected, anything you do on the laptop phone frame controls the real Android OS:
+              </div>
+              <div style="background:#090d16; padding:12px; border-radius:10px; font-size:12px; color:#94a3b8; line-height:1.7;">
+                <div>• <strong>Left Click</strong> $\to$ Taps on the Android screen at exact coordinates.</div>
+                <div>• <strong>Mouse Wheel / Drag</strong> $\to$ Swipes up, down, left, right across any app.</div>
+                <div>• <strong>Laptop Keyboard</strong> $\to$ Types text and Backspace into active text fields.</div>
+                <div>• <strong>Navigation Buttons</strong> $\to$ ◀ Back, ⭕ Home, ▢ Recent Apps, 🔒 Power lock.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- QR Code Pairing Modal -->
+  <div id="qr-pairing-modal" class="modal-backdrop show">
+    <div class="modal-box">
+      <button id="modal-qr-close" class="modal-close-btn">&times;</button>
+      
+      <div style="font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 4px;">Connect Your Android Phone</div>
+      <div style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">Scan this QR code with your Android camera or Chrome to pair instantly!</div>
+
+      <!-- Protocol Switcher: HTTPS (recommended for Android) vs HTTP -->
+      <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 12px;">
+        <button id="btn-qr-proto-https" class="tool-btn active" style="padding: 6px 14px; font-size: 12px; border-radius: 20px;">🔒 Secure HTTPS (Recommended for Android)</button>
+        <button id="btn-qr-proto-http" class="tool-btn" style="padding: 6px 14px; font-size: 12px; border-radius: 20px;">🌐 HTTP</button>
+      </div>
+
+      <div class="qr-frame">
+        <img id="qr-image" alt="QR Code">
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px;">
+        <span style="font-size: 12px; color: #94a3b8;">Session PIN:</span>
+        <span id="qr-pin-text" style="font-size: 18px; font-weight: 800; color: #38bdf8; font-family: var(--font-mono); letter-spacing: 2px;">----</span>
+      </div>
+
+      <div style="display: flex; gap: 8px; max-width: 400px; margin: 0 auto 18px;">
+        <input type="text" id="qr-url-text" class="form-input" style="font-size: 12px; padding: 8px 12px;" readonly>
+        <button id="btn-copy-url" class="btn-header btn-primary" style="padding: 8px 16px;">Copy</button>
+      </div>
+
+      <div style="font-size: 12px; color: #64748b; text-align: left; background: #090d16; padding: 12px; border-radius: 10px; line-height: 1.6;">
+        <div><strong>💡 Android Instructions:</strong></div>
+        <div>1. Connect your phone and laptop to the same Wi-Fi.</div>
+        <div>2. Scan the QR code in <strong>Chrome</strong> (if prompted with self-signed certificate, tap <em>Advanced $\to$ Proceed</em>).</div>
+        <div>3. Tap <strong>"Mirror Screen"</strong> $\to$ tap <strong>"Start now"</strong> to stream your whole phone screen!</div>
+        <div>4. For full control outside the browser, use the <strong>Whole Phone OS</strong> tab to pair with Wireless Debugging.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/console-tab.js"></script>
+  <script src="/js/network-tab.js"></script>
+  <script src="/js/dom-tab.js"></script>
+  <script src="/js/sensors.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

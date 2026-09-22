@@ -1,0 +1,28 @@
+{
+  "name": "omni-remote-wireless-debugger",
+  "version": "1.0.0",
+  "description": "Real-time Remote Wireless Mobile Debugger, Screen Mirroring & Bi-directional Controller",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "remote-debugger",
+    "screen-mirroring",
+    "mobile-controller",
+    "webrtc",
+    "websocket",
+    "devtools"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "html2canvas": "^1.4.1",
+    "qrcode": "^1.5.4",
+    "selfsigned": "^5.5.0",
+    "ws": "^8.18.0"
+  }
+}

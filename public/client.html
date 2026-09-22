@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>OmniDebug Mobile Client</title>
+  <link rel="stylesheet" href="/css/client.css">
+</head>
+<body>
+
+  <!-- Touch Ripple Visualizer (Dispatched from Laptop click) -->
+  <div id="touch-ripple-container"></div>
+
+  <!-- Floating Status Capsule -->
+  <div class="floating-header">
+    <div id="status-badge" class="status-pill status-waiting">
+      <div class="status-indicator"></div>
+      <span id="status-text">Connecting...</span>
+      <span id="ping-badge" class="badge">-- ms</span>
+      
+      <div class="share-action-bar">
+        <button id="btn-share-screen" class="btn-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Mirror Screen
+        </button>
+        <button id="btn-stop-share" class="btn-pill btn-danger" style="display: none;">
+          Stop Mirror
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Mobile App Testbed -->
+  <div class="container">
+
+    <!-- Card 1: Interactive Counter & Haptics -->
+    <div class="glass-card" id="card-counter">
+      <div class="card-glow"></div>
+      <div class="card-title">
+        <span>⚡ Interactive Controller</span>
+        <span class="badge badge-green">Live Sync</span>
+      </div>
+      <div class="card-subtitle">
+        Tap below or click from your laptop screen. Events, clicks, and states synchronize bidirectionally in real-time.
+      </div>
+
+      <div class="counter-box">
+        <span class="counter-val" id="counter-display">0</span>
+        <div class="counter-btns">
+          <button class="round-btn" id="btn-decrement">-</button>
+          <button class="round-btn" id="btn-increment">+</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <button class="app-btn btn-primary" id="btn-toast">
+          <span>🔔 Show Toast</span>
+        </button>
+        <button class="app-btn btn-purple" id="btn-vibrate">
+          <span>📳 Haptic Vibrate</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card 2: DevTools & Logging Lab -->
+    <div class="glass-card" id="card-devtools">
+      <div class="card-title">
+        <span>🛠️ Remote DevTools Bench</span>
+      </div>
+      <div class="card-subtitle">
+        Trigger logs, errors, and exceptions here. They stream directly to the Laptop Console in real-time!
+      </div>
+
+      <div class="grid-2" style="margin-bottom: 10px;">
+        <button class="app-btn btn-emerald" id="btn-log">
+          <span>console.log()</span>
+        </button>
+        <button class="app-btn btn-amber" id="btn-warn">
+          <span>console.warn()</span>
+        </button>
+      </div>
+      <div class="grid-2">
+        <button class="app-btn btn-rose" id="btn-error">
+          <span>console.error()</span>
+        </button>
+        <button class="app-btn" id="btn-table">
+          <span>console.table()</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card 3: Network Interception Lab -->
+    <div class="glass-card" id="card-network">
+      <div class="card-title">
+        <span>🌐 Network Interceptor</span>
+      </div>
+      <div class="card-subtitle">
+        Trigger HTTP fetch calls. Inspect headers, payload, and response in the Laptop Network tab.
+      </div>
+
+      <div class="grid-3">
+        <button class="app-btn" id="btn-fetch-users">
+          <span>GET Users</span>
+        </button>
+        <button class="app-btn" id="btn-fetch-post">
+          <span>POST Data</span>
+        </button>
+        <button class="app-btn" id="btn-fetch-404">
+          <span>404 Error</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card 4: Form Input & Text Sync -->
+    <div class="glass-card" id="card-inputs">
+      <div class="card-title">
+        <span>📝 Form & Input Testing</span>
+      </div>
+      <div class="card-subtitle">
+        Focus an input from your laptop or type directly to see remote keyboard and focus sync.
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="input-name">Full Name</label>
+        <input type="text" id="input-name" class="form-input" placeholder="Type here or from laptop...">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="input-slider">Slider Value: <span id="slider-val">50</span>%</label>
+        <div class="slider-container">
+          <input type="range" id="input-slider" class="form-slider" min="0" max="100" value="50">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <button class="app-btn btn-primary" id="btn-save-storage">
+          <span>💾 Save Storage</span>
+        </button>
+        <button class="app-btn btn-rose" id="btn-clear-storage">
+          <span>🗑️ Clear Storage</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card 5: Product Carousel (Horizontal Scroll Sync) -->
+    <div class="glass-card" id="card-carousel">
+      <div class="card-title">
+        <span>🛍️ Featured Gear</span>
+      </div>
+      <div class="carousel-scroll" id="product-carousel">
+        <div class="product-item">
+          <div class="product-emoji">📱</div>
+          <div class="product-name">Pro Phone X</div>
+          <div class="product-price">$999</div>
+          <button class="app-btn btn-primary" style="padding: 6px; font-size: 11px; width: 100%;">Buy</button>
+        </div>
+        <div class="product-item">
+          <div class="product-emoji">💻</div>
+          <div class="product-name">Ultra Laptop</div>
+          <div class="product-price">$1,499</div>
+          <button class="app-btn btn-primary" style="padding: 6px; font-size: 11px; width: 100%;">Buy</button>
+        </div>
+        <div class="product-item">
+          <div class="product-emoji">🎧</div>
+          <div class="product-name">Wireless Buds</div>
+          <div class="product-price">$199</div>
+          <button class="app-btn btn-primary" style="padding: 6px; font-size: 11px; width: 100%;">Buy</button>
+        </div>
+        <div class="product-item">
+          <div class="product-emoji">⌚</div>
+          <div class="product-name">Smart Watch</div>
+          <div class="product-price">$349</div>
+          <button class="app-btn btn-primary" style="padding: 6px; font-size: 11px; width: 100%;">Buy</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 6: Long Scrollable Feed (Vertical Scroll Sync Testing) -->
+    <div class="glass-card" id="card-feed">
+      <div class="card-title">
+        <span>📜 Live Feed (Scroll Sync)</span>
+      </div>
+      <div class="card-subtitle">
+        Scroll down to test seamless live scroll synchronization on your laptop screen!
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-header">
+          <div class="feed-avatar">AS</div>
+          <span class="feed-author">AetherSync Core</span>
+          <span class="feed-time">Just now</span>
+        </div>
+        <div class="feed-body">
+          Remote Wireless Debugger connected. All touch gestures, scrolls, and DOM mutations are mirrored seamlessly over WebSockets.
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-header">
+          <div class="feed-avatar" style="background: linear-gradient(135deg, #10b981, #059669);">WD</div>
+          <span class="feed-author">WebRTC Video</span>
+          <span class="feed-time">2m ago</span>
+        </div>
+        <div class="feed-body">
+          Tap "Mirror Screen" at the top to stream your actual phone screen directly to the laptop device mockup!
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-header">
+          <div class="feed-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">JS</div>
+          <span class="feed-author">REPL Console</span>
+          <span class="feed-time">5m ago</span>
+        </div>
+        <div class="feed-body">
+          You can write arbitrary JavaScript on the laptop dashboard (e.g. <code>document.body.style.background = '#1e1e2e'</code>) and see it run instantly on this phone!
+        </div>
+      </div>
+
+      <div class="feed-item">
+        <div class="feed-header">
+          <div class="feed-avatar" style="background: linear-gradient(135deg, #ec4899, #8b5cf6);">3D</div>
+          <span class="feed-author">Motion Sensor</span>
+          <span class="feed-time">10m ago</span>
+        </div>
+        <div class="feed-body">
+          Tilt your phone in your hand to see the 3D phone model on your laptop tilt in real-time using the gyroscope!
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast Notification element -->
+  <div id="toast-element" class="toast-notice">Toast notification triggered!</div>
+
+  <!-- Scripts -->
+  <script src="/js/html2canvas.min.js"></script>
+  <script src="/js/interceptor.js"></script>
+  <script src="/js/client.js"></script>
+  
+  <!-- Interactive Mobile App Script -->
+  <script>
+    // 1. Counter Logic
+    let count = 0;
+    const counterDisplay = document.getElementById('counter-display');
+    document.getElementById('btn-increment').addEventListener('click', () => {
+      count++;
+      counterDisplay.textContent = count;
+      console.log(`[Counter] Incremented to ${count}`);
+    });
+    document.getElementById('btn-decrement').addEventListener('click', () => {
+      count--;
+      counterDisplay.textContent = count;
+      console.log(`[Counter] Decremented to ${count}`);
+    });
+
+    // 2. Toast & Vibration
+    const toast = document.getElementById('toast-element');
+    document.getElementById('btn-toast').addEventListener('click', () => {
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+      console.log('[UI] Toast shown on mobile');
+    });
+
+    document.getElementById('btn-vibrate').addEventListener('click', () => {
+      if (navigator.vibrate) {
+        navigator.vibrate([150, 80, 150]);
+        console.log('[Haptics] Vibration pattern [150, 80, 150] triggered');
+      } else {
+        console.warn('[Haptics] navigator.vibrate is not supported in this browser');
+      }
+    });
+
+    // 3. DevTools Bench
+    document.getElementById('btn-log').addEventListener('click', () => {
+      console.log('✅ OmniDebug info log test:', { user: 'Mobile User', timestamp: new Date().toISOString(), status: 'Active' });
+    });
+
+    document.getElementById('btn-warn').addEventListener('click', () => {
+      console.warn('⚠️ Warning: High memory pressure or network throttled', { fps: 58, battery: '85%' });
+    });
+
+    document.getElementById('btn-error').addEventListener('click', () => {
+      console.error(new Error('💥 Simulated Uncaught Exception: Failed to load mobile resource chunk #412'));
+    });
+
+    document.getElementById('btn-table').addEventListener('click', () => {
+      console.table([
+        { id: 1, name: 'Alice', role: 'Engineer', speed: '98Mbps' },
+        { id: 2, name: 'Bob', role: 'Designer', speed: '45Mbps' },
+        { id: 3, name: 'Charlie', role: 'QA Lead', speed: '120Mbps' }
+      ]);
+    });
+
+    // 4. Network Bench
+    document.getElementById('btn-fetch-users').addEventListener('click', async () => {
+      console.log('[Network] Triggering fetch GET https://jsonplaceholder.typicode.com/users/1');
+      try {
+        const res = await fetch('https://jsonplaceholder.typicode.com/users/1');
+        const data = await res.json();
+        console.log('[Network] GET Users Success:', data.name, data.email);
+      } catch (e) {
+        console.error('[Network] Fetch error:', e);
+      }
+    });
+
+    document.getElementById('btn-fetch-post').addEventListener('click', async () => {
+      console.log('[Network] Triggering fetch POST https://jsonplaceholder.typicode.com/posts');
+      try {
+        const res = await fetch('https://jsonplaceholder.typicode.com/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: 'OmniDebug Test', body: 'Dispatched from mobile debugger', userId: 1 })
+        });
+        const data = await res.json();
+        console.log('[Network] POST Success:', data);
+      } catch (e) {
+        console.error('[Network] Fetch error:', e);
+      }
+    });
+
+    document.getElementById('btn-fetch-404').addEventListener('click', async () => {
+      console.log('[Network] Triggering fetch GET 404 test');
+      try {
+        await fetch('https://jsonplaceholder.typicode.com/non-existent-endpoint-404');
+      } catch (e) {
+        console.error('[Network] 404 Error:', e);
+      }
+    });
+
+    // 5. Input slider
+    const slider = document.getElementById('input-slider');
+    const sliderVal = document.getElementById('slider-val');
+    slider.addEventListener('input', (e) => {
+      sliderVal.textContent = e.target.value;
+    });
+
+    // 6. Storage Buttons
+    document.getElementById('btn-save-storage').addEventListener('click', () => {
+      localStorage.setItem('omni_user_preference', JSON.stringify({ theme: 'dark', counter: count, updated: Date.now() }));
+      sessionStorage.setItem('omni_session_active', 'true');
+      console.log('[Storage] Saved test items to localStorage and sessionStorage');
+      if (window.OmniInterceptor) window.OmniInterceptor.sendStorageData();
+    });
+
+    document.getElementById('btn-clear-storage').addEventListener('click', () => {
+      localStorage.clear();
+      sessionStorage.clear();
+      console.log('[Storage] Cleared storage');
+      if (window.OmniInterceptor) window.OmniInterceptor.sendStorageData();
+    });
+  </script>
+</body>
+</html>
