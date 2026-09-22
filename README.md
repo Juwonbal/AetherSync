@@ -1,17 +1,22 @@
 # 🚀 AetherSync - Android Remote Wireless Debugger & Full OS Controller
 
-A complete, high-performance **Android Remote Wireless Debugger, Full Screen Mirror & Bi-directional Controller** that lets you connect your Android phone to your laptop wirelessly via QR code or Wireless Debugging (ADB).
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://aethersync-hllr.onrender.com/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Juwonbal%2FAetherSync-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Juwonbal/AetherSync)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
+> 🌐 **Live Cloud Demo:** [https://aethersync-hllr.onrender.com/](https://aethersync-hllr.onrender.com/)  
+> Open on your laptop or phone to try instant wireless pairing, 30–60 FPS display mirroring, and DevTools anywhere in the world with zero installation!
 
 ---
 
 ## 🌟 Two Modes of Operation for Android
 
-### Mode 1: Zero-Install Full Screen WebRTC Streaming (Chrome for Android)
-- **Zero App/APK Installation**: Open Chrome on Android and scan the **Secure HTTPS QR Code**.
+### Mode 1: Zero-Install Full Screen WebRTC Streaming (Cloud or Local)
+- **Zero App/APK Installation**: Open Chrome on Android and scan the QR Code on [https://aethersync-hllr.onrender.com/](https://aethersync-hllr.onrender.com/).
 - **Whole Screen Mirroring**: Tap **"Mirror Screen"**. Android natively prompts: *"Start recording or casting with Chrome? [Start now]"*.
 - **Everything Streams Live at 30-60 FPS**: Minimize Chrome, swipe to your Home Screen, open TikTok, Instagram, WhatsApp, camera, or game apps—your entire phone display broadcasts live to your laptop!
 
-### Mode 2: Full System-Wide Wireless Control via ADB
+### Mode 2: Full System-Wide Wireless Control via ADB (Local Host)
 - Built-in official Google Android `platform-tools` (`adb.exe`).
 - **Android 11+ Wireless Pairing**: Pair with your phone wirelessly in seconds (Developer Options $\to$ Wireless Debugging $\to$ Pair with 6-digit Code).
 - **Control the Entire Android OS from Laptop**:
@@ -22,7 +27,17 @@ A complete, high-performance **Android Remote Wireless Debugger, Full Screen Mir
 
 ---
 
-## 🚀 Quick Start
+## 🌐 Try the Live Cloud Demo
+
+1. Open **[https://aethersync-hllr.onrender.com/](https://aethersync-hllr.onrender.com/)** on your laptop.
+2. Click **"Pair Device (QR)"**.
+3. Scan the QR code with your Android phone's camera or Chrome.
+4. Tap **"Mirror Screen"** $\to$ tap **"Start now"** on the Android system prompt.
+5. Minimize Chrome and switch to any app on your phone—it streams live to your laptop dashboard in real time!
+
+---
+
+## 💻 Running Locally (For Full Wireless ADB Mouse & Keyboard Control)
 
 ### 1. Start Server
 ```bash
@@ -30,36 +45,26 @@ cd c:\Users\juwon\Downloads\RWD
 npm start
 ```
 
-The server listens on both ports:
+The local server listens on both:
 - **Laptop Master Dashboard**: `http://localhost:3000`
 - **Android Phone HTTPS URL**: `https://<YOUR_WIFI_IP>:3443`
-- **Android Phone HTTP URL**: `http://<YOUR_WIFI_IP>:3000`
 
-### 2. Connect Your Android Phone
-
-#### Option A (Instant Web Mirror):
-1. Open `http://localhost:3000` on your laptop.
-2. Scan the **Secure HTTPS QR Code** using Chrome on Android.
-3. If prompted about self-signed certificate, tap **Advanced $\to$ Proceed**.
-4. Tap **"Mirror Screen"** and accept the Android prompt **"Start now"**.
-5. Switch to any app on your phone—it mirrors live on your laptop screen!
-
-#### Option B (Full OS Wireless Mouse/Keyboard Control via ADB):
+### 2. Connect Your Android Phone via Wireless ADB
 1. On your Android phone, enable **Developer Options $\to$ Wireless Debugging**.
 2. Tap **"Pair device with pairing code"** to view your Wi-Fi IP, Port, and 6-digit PIN.
-3. In the Laptop Dashboard, open the **"Whole Phone OS"** tab:
+3. In the Laptop Dashboard (`http://localhost:3000`), open the **"Whole Phone OS"** tab:
    - Enter IP, Port, and 6-digit PIN, then click **"Pair"**.
 4. Now your mouse clicks and drags on the laptop frame interact directly with your real Android phone!
-5. (Alternative): If plugged in via USB once, click **"⚡ Switch USB to Wireless (5555)"**, then unplug the cable and stay connected wirelessly!
+5. (Shortcut): If plugged in via USB once, click **"⚡ Switch USB to Wireless (5555)"**, then unplug the cable and stay connected wirelessly!
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-c:\Users\juwon\Downloads\RWD/
+AetherSync/
 ├── bin/platform-tools/        # Official Google Android ADB binaries
-├── certs/                     # Auto-generated SSL certificates for Android WebRTC
+├── certs/                     # Auto-generated SSL certificates for local WebRTC
 ├── adb-bridge.js              # Node.js ADB Controller (Taps, Swipes, Keys, Screencap)
 ├── server.js                  # Dual HTTP/HTTPS Express + WebSocket Server
 ├── test_e2e.js                # Protocol Verification Suite
