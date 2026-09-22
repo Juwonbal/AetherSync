@@ -18,9 +18,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 const HTTP_PORT = process.env.PORT || 3000;
 const HTTPS_PORT = process.env.HTTPS_PORT || 3443;
 
-// Certificate Generation / Storage
-const certDir = path.join(__dirname, 'certs');
-if (!fs.existsSync(certDir)) fs.mkdirSync(certDir, { recursive: true });
+// Certificate Generation / Storage (use os.tmpdir if read-only or in serverless)
+let certDir = path.join(__dirname, 'certs');
+try {
+  if (!fs.existsSync(certDir)) fs.mkdirSync(certDir, { recursive: true });
+} catch (e) {
+  certDir = path.join(os.tmpdir(), 'aethersync-certs');
+  try {
+    if (!fs.existsSync(certDir)) fs.mkdirSync(certDir, { recursive: true });
+  } catch (err) {}
+}
 
 const certPath = path.join(certDir, 'cert.pem');
 const keyPath = path.join(certDir, 'key.pem');
@@ -36,8 +43,10 @@ async function getSslOptions() {
     console.log('Generating SSL certificate for secure WebRTC and Android display sharing...');
     const attrs = [{ name: 'commonName', value: 'aethersync.local' }];
     const pems = await selfsigned.generate(attrs, { days: 365 });
-    fs.writeFileSync(certPath, pems.cert);
-    fs.writeFileSync(keyPath, pems.private);
+    try {
+      fs.writeFileSync(certPath, pems.cert);
+      fs.writeFileSync(keyPath, pems.private);
+    } catch (e) {}
     return {
       cert: pems.cert,
       key: pems.private
@@ -457,4 +466,9 @@ async function start() {
   }
 }
 
-start();
+if (!process.env.VERCEL) {
+  start();
+}
+
+module.exports = app;
+
